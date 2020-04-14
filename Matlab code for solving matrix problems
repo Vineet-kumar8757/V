@@ -1,0 +1,105 @@
+m=input('Enter the value of n for n*n matrix:')
+A=randi([1,10],m)
+m=5
+A=[9 1 2 2 7;10 3 10 5 1;2 6 10 10 9;10 10 5 8 10;7 10 9 10 7]
+%For similar matrixes
+disp('Displaying a matrix similar to A')
+u=poly(A)
+S=compan(u)
+%finding rank of a matrix
+disp('Rank of A')
+rank(A)
+%defining another function for finding row echelon form 
+disp('Row echelon form of A')
+round(ref(A),2)
+disp('Row reduced form of matrix A')
+round(rref(A),2)
+disp('The number of pivot =')
+rank(A)
+disp('The number of free variables =')
+m-rank(A)
+%finding the determinant of matrix A that have been generated randomly
+disp('The determinant of A')
+det(A)
+%determining the inverse of the matrix A
+disp('The inverse of matrix A')
+inv(A)
+%finding the eigenvalues of the matrix A
+disp('The eigen values of matrix A')
+k=eig(A)
+pivot(A,k,m)
+%determining the eigen vectors and diagonal matrix simultaniously,here V is
+%eigen vector and D is the Diagonal matrix
+disp('The eigen vector V and diagonal matrix D of matrix A')
+[V,D] = eig(A)
+disp("The diagonal matrix of A is :")
+disp(round(D,2))
+%disp('Checking for Diagonization invP*A*P')
+%inv(V)*A*V
+%displaying the invertible matrix P for Diagonization
+disp('The permetuation matrix of A is :')
+P = round(V,2)
+if (rank(P)== rank(A))
+    disp('Matrix A is Diagonizable as rank of P is equal to rank of A')
+    disp("P inverse is :")
+    disp(inv(P))
+    disp("Now , finding Diagonal Matrix of A using P and P inverse and printing D . D comes out to ")
+    disp(inv(P)*A*P)
+    disp("Hence , verified")
+    
+else
+    disp('Matrix A is Nondiagonizable as rank of P is less than rank of A ')
+   
+end
+
+function m = ref(a)
+% Script for Row-Echelon Form
+%Vineet Kumar
+%IIT JAMMU
+%Department of Civil Engineering
+if length(a(1,:)) ~= length(a(:,1))
+    error('Matrix is not square nxn or wrong number of input arguments')
+end
+n=length(a(1,:));
+j=1;
+%doing the mathematical operations for eliminating and reducing it to row
+%echelon form
+    for i = 1:n-1 
+           if (i==j)
+                if (a(i,j)==0) 
+                    c = a(i,:); a(i,:)= a(i+1,:); a(i+1,:) = c;
+                end
+                a(i,:)= (1/a(i,j))* a(i,:);
+                for k=i+1:n
+                    a(k,:)=(-a(k,j)* a(i,:)) + a(k,:);
+                end
+           end
+        j=j+1;        
+    end
+ a(n,:)= (1/a(n,n))* a(n,:);
+ m=a;
+end
+%function for finding the number of pivot
+function k = pivot(a,k,m)
+n=length(k)
+j=0
+for i = 1:n
+    disp('L=A-kI where k is eigen values')
+    disp('where k:')
+    disp(k(i))
+    l=a-k(i)*eye(m)
+    round(det(l),2)  
+    disp('The row reduced echelon form of L')
+    p=round(rref(l),2)
+    disp('The row  echelon form of L')
+    ref(l)
+    disp('The number of pivot =')
+    rank(p)
+    disp('The number of free variables =')
+    q=m-rank(p)
+    j=j+q
+end
+end
+
+    
+    
