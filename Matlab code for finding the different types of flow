@@ -1,0 +1,165 @@
+%asking for section information
+section = input('Enter Tr for trapezoidal T for triangle and R for rectangle:','s');
+discharge = input('Enter the discharge of water:');
+n= input('Enter the value of coefficient of mannings:');
+if section=='Tr'
+    %following are the required data for computation of the flow for
+    %trapezoidal section
+    m=input('Enter the slope of trapezoidal section:');
+    b=input("Enter the bed width of the trapezoidal section:");
+    s=input('Enter the slope of the bed:');
+    y=input('Enter the depth of flow:');
+    tr(m,s,b,y,discharge,n)
+elseif section=="T"
+    %following are the required data for computation of the flow for
+    %triangular section
+    m=input("Enter the slope of the triangular section:");
+    s=input("Enter the slope of the bed: ");
+    flow_depth=input('Enter the depth of flow:');
+    t(m,s,flow_depth,discharge,n)
+elseif section=="R"
+    %following are the required data for computation of the flow for the
+    %rectangular section
+    b=input('Enter the breadth of the channel:');
+    y=input('Enter the depth of the flow:');
+    s=input('Enter the slope of the bed:');
+    %distance_at_x=input('Enter the distance at which you want the depth of flow')
+    %rkm(n,discharge,b,y,s)
+    r(b,s,y,discharge,n)
+end
+%calculation for rectangular section
+function rectangle = r(b,s,y,discharge,n)
+    area=b*y;
+    wetted_perimeter = b+2*y;
+    hydraulic_radius = area/wetted_perimeter;
+    discharge_permeter = discharge/b;
+    critical_depth = ((discharge_permeter)^2/9.81)^(1/3)
+    if s <0
+        spcase(s,critical_depth,y)
+    elseif s==0
+        spcase(s,critical_depth,y)
+    elseif s>0    
+        p = round((discharge*n/(b*sqrt(s)))^3,9);
+        np(p,b,s,y,critical_depth)
+    end
+        %Vineet Kumar
+        %IIT Jammu
+        %Civil Department
+    function normal_depth = np(p,b,s,y,critical_depth)
+         normal_depth = roots([b*b 0 0 -4*p -4*b*p -p*b*b]);
+         integer_normal_depth = normal_depth(imag(normal_depth)==0)
+         z=length(integer_normal_depth)
+         for i=1:z
+             if integer_normal_depth(i) > 0
+                 real_normal_depth = integer_normal_depth(i)
+             end
+         end  
+        cm(real_normal_depth,y,critical_depth)
+    end
+end
+%calculation for trapezoidal section
+function trapezoidal = tr(m,s,b,y,discharge,n)
+    area = b*y+m*y*y; 
+    wetted_perimeter = b+2*y*sqrt(m*m+1);
+    hydraulic_radius = area/wetted_perimeter;
+    velocity_of_flow = discharge/area;
+    %here e is assigned as slope divided by breadth to make the equation of
+    %equation for critical depth simpler
+    e = m/b;
+    % here h is nothing but the velocity head
+    h = (velocity_of_flow)^2/(2*9.81);
+    %calculating critical depth
+    real_critical_depth = roots([e 1-4*h*e -2*h]);
+    %real_critical_depth = depth(img(depth)==0)
+    %eliminating the imaginary roots and the negative roots because depth
+    %can't be negative or imaginary
+    z = length(real_critical_depth);
+    for i = 1:z
+        if real_critical_depth(i) > 0
+            critical_depth = real_critical_depth(i)
+        end
+    end
+    np(discharge,n,s,b,m,critical_depth)
+    function nr_depth = np(discharge,n,s,b,m,critical_depth)
+        p = (discharge*n/sqrt(s))^3;
+        c=sqrt(m*m+1);
+        %finding the roots for the normal depth
+        normal_depth = roots([m^5 5*b*m^4 10*(b^2)*(m^3) 10*(b^3)*(m^2) 5*m*b^4 b^5 0 0 -4*p*c^2 -4*c*b*p -p*b^2]);
+        integer_roots = normal_depth(imag(normal_depth)==0);
+        z = length(integer_roots);
+        for i = 1:z
+            if integer_roots(i)>0
+                real_normal_depth = integer_roots(i)
+            end
+        end
+        cm(real_normal_depth,y,critical_depth) 
+    end
+end
+%calculation for triangular section
+function triangular = t(m,s,flow_depth,discharge,n)
+    y=flow_depth;
+    area = m*y*y;
+    wetted_perimeter = 2*y*sqrt(m*m+1);
+    hydraulic_radius = area/wetted_perimeter;
+    critical_depth = ((2*discharge^2)/(9.81*m^2))^(1/5)
+    p =(discharge*n/sqrt(s))^3;
+    %calculating normal depth
+    real_normal_depth = (4*p*(m*m+1)/m^5)^(1/8)
+    if s > 0
+        cm(real_normal_depth,y,critical_depth)     
+    elseif s < 0
+        spcase(s,critical_depth,y)
+    elseif s==0
+        spcase(s,critical_depth,y)
+    end
+end
+%comparing the flow depth, normal depth and the critical depth to determine
+%the type of flow
+function comparison = cm(real_normal_depth,y,critical_depth)
+    if real_normal_depth > critical_depth
+        disp('The flow is mild')
+        if real_normal_depth > y > critical_depth
+            disp('M2')
+        elseif real_normal_depth < y
+            disp('M1')
+        elseif y < critical_depth
+            disp('M3')
+        end
+    elseif critical_depth > real_normal_depth
+        disp('The flow is steep')
+        if y > critical_depth
+            disp('S1')
+        elseif critical_depth > y > real_normal_depth
+            disp('S2')
+        elseif real_normal_depth > y
+            disp('S3')
+        end
+    elseif real_normal_depth == critical_depth
+        disp('The flow is critical')
+        if y > critical_depth 
+            disp('C1')
+        elseif y < critical_depth
+            disp('C3')
+        end
+    end
+end
+function h_and_adv = spcase(s,critical_depth,y)
+    if s==0
+        disp('The flow is horizontal')
+        if y > critical_depth
+            disp('H2')
+        elseif y < critical_depth
+            disp('H3')
+        end
+    elseif s < 0
+        disp('The flow is adverse')
+        if y > critical_depth
+            disp('A2')
+        elseif y < critical_depth
+            disp('A3')
+        end
+    end
+end
+     
+    
+    
